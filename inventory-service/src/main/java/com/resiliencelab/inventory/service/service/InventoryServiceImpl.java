@@ -1,5 +1,6 @@
 package com.resiliencelab.inventory.service.service;
-
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import com.resiliencelab.inventory.service.dto.InventoryResponse;
 import com.resiliencelab.inventory.service.dto.ReserveInventoryRequest;
 import com.resiliencelab.inventory.service.entity.Inventory;
@@ -19,6 +20,7 @@ public class InventoryServiceImpl implements InventoryService{
 
 
     @Override
+    @Cacheable(value = "inventory", key = "#productId")
     public InventoryResponse getInventoryById(String productId) {
         Inventory inventory = inventoryRepository.findById(productId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND ,"product not found"));
@@ -26,7 +28,7 @@ public class InventoryServiceImpl implements InventoryService{
         return InventoryResponse.from(inventory);
     }
 
-
+    @CacheEvict(value = "inventory", key = "#productId")
     @Transactional
     public InventoryResponse reserveInventory(String productId, ReserveInventoryRequest request){
 
