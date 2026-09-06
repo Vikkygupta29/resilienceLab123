@@ -10,7 +10,7 @@ import java.util.UUID;
 @Getter
 @Setter
 public class PaymentRequestedEvent {
-
+    private UUID eventId;
     private UUID orderId;
     private BigDecimal amount;
 }

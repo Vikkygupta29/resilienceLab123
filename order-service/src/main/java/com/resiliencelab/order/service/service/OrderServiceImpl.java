@@ -35,6 +35,7 @@ public class OrderServiceImpl implements OrderService{
         Order savedOrder = orderRepository.save(order);
 
         OrderCreatedEvent event = new OrderCreatedEvent(
+                UUID.randomUUID(),
                 savedOrder.getId(),
                 savedOrder.getProductId(),
                 savedOrder.getAmount(),

@@ -52,6 +52,7 @@ public class InventoryReservedConsumer {
 
         PaymentRequestedEvent paymentEvent =
                 new PaymentRequestedEvent(
+                        UUID.randomUUID(),
                         order.getId(),
                         order.getAmount()
                 );

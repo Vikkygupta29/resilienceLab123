@@ -14,6 +14,7 @@ import java.util.UUID;
 @NoArgsConstructor
 public class PaymentRequestedEvent {
 
+    private UUID eventId;
     private UUID  orderId;
     private BigDecimal amount;
 
