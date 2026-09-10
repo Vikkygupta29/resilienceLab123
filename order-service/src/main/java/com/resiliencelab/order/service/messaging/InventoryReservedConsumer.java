@@ -5,13 +5,18 @@ import com.resiliencelab.order.service.dto.event.PaymentRequestedEvent;
 import com.resiliencelab.order.service.entity.Order;
 import com.resiliencelab.order.service.enums.OrderStatus;
 import com.resiliencelab.order.service.repository.OrderRepository;
+import org.slf4j.MDC;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
 @Component
 public class InventoryReservedConsumer {
+
+    private static final String CORRELATION_ID = "correlationId";
 
     private final OrderRepository orderRepository;
     private final PaymentEventProducer paymentEventProducer;
@@ -29,36 +34,49 @@ public class InventoryReservedConsumer {
             groupId = "order-service-inventory-group"
     )
     public void consumeInventoryReserved(
-            InventoryReservedEvent event) {
+            InventoryReservedEvent event,
+            @Header(
+                    value = "X-Correlation-ID",
+                    required = false
+            ) String correlationId) {
 
-        System.out.println("=================================");
-        System.out.println("Order Service received inventory.reserved");
-        System.out.println("Order ID: " + event.getOrderId());
-        System.out.println("Product ID: " + event.getProductId());
-        System.out.println("Quantity: " + event.getQuantity());
+        if (correlationId != null && !correlationId.isBlank()) {
+            MDC.put(CORRELATION_ID, correlationId);
+        }
 
-        UUID orderId = UUID.fromString(event.getOrderId());
+        try {
+            System.out.println("=================================");
+            System.out.println("Order Service received inventory.reserved");
+            System.out.println("Order ID: " + event.getOrderId());
+            System.out.println("Product ID: " + event.getProductId());
+            System.out.println("Quantity: " + event.getQuantity());
 
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException(
-                        "Order not found: " + orderId
-                ));
+            UUID orderId = UUID.fromString(event.getOrderId());
 
-        order.setStatus(OrderStatus.INVENTORY_RESERVED);
+            Order order = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new RuntimeException(
+                            "Order not found: " + orderId
+                    ));
 
-        orderRepository.save(order);
+            order.setStatus(OrderStatus.INVENTORY_RESERVED);
 
-        System.out.println("Order status updated to INVENTORY_RESERVED");
+            orderRepository.save(order);
 
-        PaymentRequestedEvent paymentEvent =
-                new PaymentRequestedEvent(
-                        UUID.randomUUID(),
-                        order.getId(),
-                        order.getAmount()
-                );
+            System.out.println("Order status updated to INVENTORY_RESERVED");
 
-        paymentEventProducer.publishPaymentRequested(paymentEvent);
+            PaymentRequestedEvent paymentEvent =
+                    new PaymentRequestedEvent(
+                            UUID.randomUUID(),
+                            order.getId(),
+                            order.getAmount()
+                    );
 
-        System.out.println("=================================");
+            paymentEventProducer.publishPaymentRequested(paymentEvent);
+
+            System.out.println("=================================");
+
+        } finally {
+            MDC.remove(CORRELATION_ID);
+        }
     }
 }
