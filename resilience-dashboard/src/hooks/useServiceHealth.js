@@ -12,7 +12,12 @@ export function useServiceHealth() {
         const results = await Promise.all(
             services.map(async (service) => {
                 try {
-                    const response = await fetch(service.healthUrl);
+                    const response = await fetch(
+                        `${service.healthUrl}?t=${Date.now()}`,
+                        {
+                            cache: "no-store",
+                        }
+                    );
 
                     if (!response.ok) {
                         return [service.id, { status: "DOWN" }];
