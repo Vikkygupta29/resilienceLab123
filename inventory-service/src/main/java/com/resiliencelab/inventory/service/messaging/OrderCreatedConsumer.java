@@ -40,6 +40,7 @@ public class OrderCreatedConsumer {
             backOff = @BackOff(delay = 2000)
     )
     @KafkaListener(
+            id = "inventoryOrderCreatedListener",
             topics = "order.created",
             groupId = "inventory-service-group"
     )

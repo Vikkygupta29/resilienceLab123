@@ -4,6 +4,7 @@ import com.resiliencelab.inventory.service.dto.event.InventoryFailedEvent;
 import com.resiliencelab.inventory.service.messaging.InventoryReservedEvent;
 import com.resiliencelab.inventory.service.messaging.OrderCreatedEvent;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -15,11 +16,7 @@ import org.springframework.context.annotation.Configuration;
 
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 
-import org.springframework.kafka.core.ConsumerFactory;
-import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.core.DefaultKafkaProducerFactory;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.core.ProducerFactory;
+import org.springframework.kafka.core.*;
 
 import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 import org.springframework.kafka.support.serializer.JacksonJsonSerializer;
@@ -35,6 +32,12 @@ public class KafkaConfig {
 
     @Value("${spring.kafka.consumer.group-id}")
     private String groupId;
+
+    private final MeterRegistry meterRegistry;
+
+    public KafkaConfig(MeterRegistry meterRegistry) {
+        this.meterRegistry = meterRegistry;
+    }
 
 
     // ==========================================
@@ -81,7 +84,14 @@ public class KafkaConfig {
                 "com.resiliencelab.inventory.service.messaging.OrderCreatedEvent"
         );
 
-        return new DefaultKafkaConsumerFactory<>(props);
+        DefaultKafkaConsumerFactory<String, OrderCreatedEvent> factory =
+                new DefaultKafkaConsumerFactory<>(props);
+
+        factory.addListener(
+                new MicrometerConsumerListener<>(meterRegistry)
+        );
+
+        return factory;
     }
 
 

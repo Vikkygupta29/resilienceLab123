@@ -24,7 +24,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { useState ,useEffect } from "react";
+import { useState, useEffect } from "react";
 
 import { useServiceHealth } from "./hooks/useServiceHealth";
 import { services } from "./config/services";
@@ -43,7 +43,7 @@ const stats = [
   {
     label: "Orders Confirmed",
     key: "ordersConfirmed",
-    detail: "+ Real-time Prometheus metric",
+    detail: "+ Persistent order count",
     icon: CheckCircle2,
   },
   {
@@ -69,28 +69,28 @@ function FaultCard({ service, servicePath }) {
 
 
   useEffect(() => {
-  const loadFaultMode = async () => {
-    try {
-      const response = await fetch(
-        `/service/order/admin/faults/${servicePath}?t=${Date.now()}`,
-        {
-          cache: "no-store",
+    const loadFaultMode = async () => {
+      try {
+        const response = await fetch(
+          `/service/order/admin/faults/${servicePath}?t=${Date.now()}`,
+          {
+            cache: "no-store",
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to load fault mode");
         }
-      );
 
-      if (!response.ok) {
-        throw new Error("Failed to load fault mode");
+        const currentMode = await response.text();
+        setMode(currentMode);
+      } catch (error) {
+        console.error(`Failed to load ${service} fault mode:`, error);
       }
+    };
 
-      const currentMode = await response.text();
-      setMode(currentMode);
-    } catch (error) {
-      console.error(`Failed to load ${service} fault mode:`, error);
-    }
-  };
-
-  loadFaultMode();
-}, [servicePath, service]);
+    loadFaultMode();
+  }, [servicePath, service]);
 
   const faultModes = [
     "NORMAL",
@@ -1089,7 +1089,7 @@ function App() {
                     </h3>
 
                     <p className="mt-1 text-xs text-slate-600">
-                      Maximum records waiting for Kafka consumers
+                      Records waiting in the order.created consumer
                     </p>
                   </div>
 

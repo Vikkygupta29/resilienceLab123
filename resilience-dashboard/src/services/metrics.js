@@ -88,14 +88,13 @@ export async function getCircuitBreakerFailedCalls() {
     }));
 }
 
-
 export async function getKafkaConsumerLag() {
     const result = await queryPrometheus(
-        "max by (client_id) (kafka_consumer_fetch_manager_records_lag)"
+        'resiliencelab_kafka_consumer_lag{topic="order.created"}'
     );
 
     return result.data.result.map((item) => ({
-        clientId: item.metric.client_id || "unknown",
+        clientId: item.metric.group || "unknown",
         value: Number(item.value[1]),
     }));
 }
