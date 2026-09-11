@@ -1,3 +1,5 @@
 .idea/
 
 infrastructure/grafana-data/
+
+resiliencelab_backup.sql
