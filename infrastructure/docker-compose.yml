@@ -48,7 +48,7 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-
+      - prometheus_data:/prometheus
   grafana:
     image: grafana/grafana:latest
     container_name: resiliencelab-grafana
@@ -71,3 +71,4 @@ services:
 
 volumes:
   mysql_data:
+  prometheus_data:
