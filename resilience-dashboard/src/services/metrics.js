@@ -64,6 +64,31 @@ export async function getCircuitBreakerState() {
 }
 
 
+export async function getRetryMetrics() {
+    const result = await queryPrometheus(
+        "resilience4j_retry_calls_total"
+    );
+
+    return result.data.result.map((item) => ({
+        name: item.metric.name || "unknown",
+        kind: item.metric.kind || "unknown",
+        value: Number(item.value[1]),
+    }));
+}
+
+export async function getCircuitBreakerFailedCalls() {
+    const result = await queryPrometheus(
+        "resilience4j_circuitbreaker_failed_calls_total"
+    );
+
+    return result.data.result.map((item) => ({
+        name: item.metric.name || "unknown",
+        kind: item.metric.kind || "unknown",
+        value: Number(item.value[1]),
+    }));
+}
+
+
 export async function getKafkaConsumerLag() {
     const result = await queryPrometheus(
         "max by (client_id) (kafka_consumer_fetch_manager_records_lag)"

@@ -24,7 +24,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { useState } from "react";
+import { useState ,useEffect } from "react";
 
 import { useServiceHealth } from "./hooks/useServiceHealth";
 import { services } from "./config/services";
@@ -35,6 +35,9 @@ import { useErrorRate } from "./hooks/useErrorRate";
 import { useCircuitBreaker } from "./hooks/useCircuitBreaker";
 import { useKafkaConsumerLag } from "./hooks/useKafkaConsumerLag";
 import usePrometheusStatus from "./hooks/usePrometheusStatus";
+import { useRetryMetrics } from "./hooks/useRetryMetrics";
+import { useCircuitBreakerFailedCalls } from "./hooks/useCircuitBreakerFailedCalls";
+
 
 const stats = [
   {
@@ -62,6 +65,32 @@ function FaultCard({ service, servicePath }) {
   const [mode, setMode] = useState("NORMAL");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+
+
+
+  useEffect(() => {
+  const loadFaultMode = async () => {
+    try {
+      const response = await fetch(
+        `/service/order/admin/faults/${servicePath}?t=${Date.now()}`,
+        {
+          cache: "no-store",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to load fault mode");
+      }
+
+      const currentMode = await response.text();
+      setMode(currentMode);
+    } catch (error) {
+      console.error(`Failed to load ${service} fault mode:`, error);
+    }
+  };
+
+  loadFaultMode();
+}, [servicePath, service]);
 
   const faultModes = [
     "NORMAL",
@@ -205,6 +234,10 @@ function App() {
   const { circuitBreakers } = useCircuitBreaker();
   const { consumerLag } = useKafkaConsumerLag();
   const prometheusConnected = usePrometheusStatus();
+  const { retryMetrics } = useRetryMetrics();
+  const { failedCalls } = useCircuitBreakerFailedCalls();
+
+
 
   const healthyCount = services.filter(
     (service) => health[service.id]?.status === "UP"
@@ -837,7 +870,90 @@ function App() {
                       </div>
                     )}
                   </div>
+
+
+
                 </section>
+
+                <div className="rounded-2xl border  border-white/10 bg-[#0f141c] p-5">
+                  <div className="mb-4">
+                    <h3 className="text-sm font-semibold text-white">
+                      Retry Metrics
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Resilience4j retry call statistics
+                    </p>
+                  </div>
+
+                  {retryMetrics.length === 0 ? (
+                    <p className="text-sm text-slate-500">
+                      No retry metrics available
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {retryMetrics.map((metric, index) => (
+                        <div
+                          key={`${metric.name}-${metric.kind}-${index}`}
+                          className="flex items-center justify-between rounded-xl border border-white/5 bg-black/10 px-4 py-3"
+                        >
+                          <div>
+                            <p className="text-sm font-medium text-slate-200">
+                              {metric.name}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {metric.kind}
+                            </p>
+                          </div>
+
+                          <span className="text-lg font-semibold text-white">
+                            {metric.value}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="rounded-xl border border-white/10 bg-[#0f141c] p-5">
+                  <div className="mb-4">
+                    <h3 className="text-sm font-semibold text-white">
+                      Circuit Breaker Failed Calls
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Failed calls recorded by Resilience4j
+                    </p>
+                  </div>
+
+                  {failedCalls.length === 0 ? (
+                    <p className="text-sm text-slate-500">
+                      No failed calls recorded
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {failedCalls.map((metric, index) => (
+                        <div
+                          key={`${metric.name}-${metric.kind}-${index}`}
+                          className="flex items-center justify-between rounded-xl border border-white/5 bg-black/10 px-4 py-3"
+                        >
+                          <div>
+                            <p className="text-sm font-medium text-slate-200">
+                              {metric.name}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {metric.kind}
+                            </p>
+                          </div>
+
+                          <span className="text-lg font-semibold text-white">
+                            {metric.value}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+
 
               </>
             )}
@@ -933,8 +1049,8 @@ function App() {
 
                       <span
                         className={`rounded-full px-3 py-1.5 text-xs font-medium ${prometheusConnected
-                            ? "bg-emerald-400/5 text-emerald-400"
-                            : "bg-red-400/5 text-red-400"
+                          ? "bg-emerald-400/5 text-emerald-400"
+                          : "bg-red-400/5 text-red-400"
                           }`}
                       >
                         {prometheusConnected ? "CONNECTED" : "DISCONNECTED"}
