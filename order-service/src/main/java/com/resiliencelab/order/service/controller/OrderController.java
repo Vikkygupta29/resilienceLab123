@@ -6,6 +6,7 @@ import com.resiliencelab.order.service.dto.OrderRequest;
 import com.resiliencelab.order.service.dto.OrderResponse;
 import com.resiliencelab.order.service.dto.client.InventoryResponse;
 import com.resiliencelab.order.service.dto.client.PaymentResponse;
+import com.resiliencelab.order.service.enums.OrderStatus;
 import com.resiliencelab.order.service.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -53,6 +56,18 @@ public class OrderController {
                         new BigDecimal("500.00")
                 )
         );
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<Map<String, Long>> getOrderStats() {
+
+        Map<String, Long> stats = new LinkedHashMap<>();
+
+        for (OrderStatus status : OrderStatus.values()) {
+            stats.put(status.name(), orderService.countByStatus(status));
+        }
+
+        return ResponseEntity.ok(stats);
     }
 
 }

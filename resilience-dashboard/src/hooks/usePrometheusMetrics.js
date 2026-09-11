@@ -15,12 +15,19 @@ export function usePrometheusMetrics() {
             setLoading(true);
 
             const [
-                ordersResult,
+                ordersStatsResult,
                 faultsResult,
                 errorsResult,
                 totalRequestsResult,
             ] = await Promise.all([
-                queryPrometheus("orders_confirmed_total"),
+                fetch(`/service/order/api/orders/stats?t=${Date.now()}`, {
+                    cache: "no-store",
+                }).then((response) => {
+                    if (!response.ok) {
+                        throw new Error("Failed to load order statistics");
+                    }
+                    return response.json();
+                }),
 
                 queryPrometheus("faults_injected_total"),
 
@@ -34,7 +41,7 @@ export function usePrometheusMetrics() {
             ]);
 
             const ordersConfirmed =
-                Number(ordersResult.data.result?.[0]?.value?.[1]) || 0;
+                Number(ordersStatsResult.CONFIRMED) || 0;
 
             const faultsInjected =
                 Number(faultsResult.data.result?.[0]?.value?.[1]) || 0;
@@ -56,7 +63,7 @@ export function usePrometheusMetrics() {
                 errorRate,
             });
         } catch (error) {
-            console.error("Failed to load Prometheus metrics:", error);
+            console.error("Failed to load dashboard metrics:", error);
         } finally {
             setLoading(false);
         }

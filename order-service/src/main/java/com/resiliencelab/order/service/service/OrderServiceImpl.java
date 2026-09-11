@@ -6,6 +6,7 @@ import com.resiliencelab.order.service.dto.OrderRequest;
 import com.resiliencelab.order.service.dto.OrderResponse;
 import com.resiliencelab.order.service.entity.Order;
 import com.resiliencelab.order.service.entity.OutboxEvent;
+import com.resiliencelab.order.service.enums.OrderStatus;
 import com.resiliencelab.order.service.exception.OrderNotFoundException;
 import com.resiliencelab.order.service.messaging.OrderEventProducer;
 import com.resiliencelab.order.service.repository.OrderRepository;
@@ -72,6 +73,11 @@ public class OrderServiceImpl implements OrderService{
         );
 
         return OrderResponse.from(order);
+    }
+
+    @Override
+    public long countByStatus(OrderStatus status) {
+        return orderRepository.countByStatus(status);
     }
 
 }
