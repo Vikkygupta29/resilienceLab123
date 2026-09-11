@@ -43,7 +43,7 @@ public class OrderController {
     public ResponseEntity<InventoryResponse> testInventory() {
 
         return ResponseEntity.ok(
-                inventoryClient.reserveInventory("mouse-1", 1)
+                inventoryClient.reserveInventory("keyboard-1", 1)
         );
     }
 
