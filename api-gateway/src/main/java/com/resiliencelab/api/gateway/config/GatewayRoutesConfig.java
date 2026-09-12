@@ -21,7 +21,7 @@ public class GatewayRoutesConfig {
         RouterFunction<ServerResponse> orderRoute =
                 route("order-service")
                         .POST("/api/orders", http())
-                        .before(uri("http://localhost:8081"))
+                        .before(uri("http://order-service:8081"))
                         .filter(
                                 rateLimit(config -> config
                                         .setCapacity(20)
@@ -34,13 +34,13 @@ public class GatewayRoutesConfig {
         RouterFunction<ServerResponse> inventoryRoute =
                 route("inventory-service")
                         .GET("/api/inventory/{productId}", http())
-                        .before(uri("http://localhost:8083"))
+                        .before(uri("http://inventory-service:8083"))
                         .build();
 
         RouterFunction<ServerResponse> paymentRoute =
                 route("payment-service")
                         .POST("/api/payments", http())
-                        .before(uri("http://localhost:8082"))
+                        .before(uri("http://payment-service:8082"))
                         .build();
 
         return orderRoute
