@@ -876,36 +876,61 @@ The React frontend is intentionally run separately.
 
 Install:
 
-* Java 21
-* Maven
-* Node.js
-* npm
 * Docker Desktop
 * Git
+* Node.js
+* npm
+
+Java and Maven are only required if you want to run or develop the Spring Boot services directly outside Docker.
+
+---
+
+## Clone the Repository
+
+Clone the repository:
+
+```bash
+git clone <YOUR_REPOSITORY_URL>
+```
+
+Enter the project directory:
+
+```bash
+cd ResilienceLab
+```
 
 ---
 
 ## Start Backend and Infrastructure
 
-From the infrastructure directory:
+Navigate to the infrastructure directory:
 
 ```bash
-docker compose up -d
+cd infrastructure
 ```
 
-To rebuild images after backend changes:
+Build and start all backend services and infrastructure:
 
 ```bash
-docker compose build
-docker compose up -d
+docker compose up -d --build
 ```
 
-To rebuild only one changed service:
+This starts:
 
-```bash
-docker compose build inventory-service
-docker compose up -d inventory-service
+```text
+API Gateway
+Order Service
+Inventory Service
+Payment Service
+MySQL
+Redis
+Kafka
+Prometheus
+Grafana
+Jaeger
 ```
+
+No manual Spring Boot service startup is required when using Docker Compose.
 
 ---
 
@@ -915,7 +940,59 @@ docker compose up -d inventory-service
 docker compose ps
 ```
 
-You should see the ResilienceLab containers running.
+All ResilienceLab containers should show as running.
+
+To view logs:
+
+```bash
+docker compose logs
+```
+
+To view logs for a specific service:
+
+```bash
+docker compose logs order-service
+```
+
+---
+
+# 🔄 Rebuild After Backend Changes
+
+If backend source code is changed, rebuild the affected Docker image.
+
+For example:
+
+```bash
+docker compose build inventory-service
+docker compose up -d inventory-service
+```
+
+For all backend services:
+
+```bash
+docker compose build
+docker compose up -d
+```
+
+---
+
+# 🛑 Stop the Project
+
+From the `infrastructure` directory:
+
+```bash
+docker compose down
+```
+
+This stops and removes the containers while preserving Docker volumes.
+
+To completely reset persistent data:
+
+```bash
+docker compose down -v
+```
+
+> `docker compose down -v` removes persistent Docker volumes such as MySQL, Redis, Kafka, and Prometheus data.
 
 ---
 
@@ -973,7 +1050,7 @@ http://localhost:16686
 
 The React dashboard runs separately from Docker Compose.
 
-Navigate to the frontend directory:
+Open another terminal and navigate to the frontend directory:
 
 ```bash
 cd frontend
@@ -985,13 +1062,15 @@ Install dependencies:
 npm install
 ```
 
-Start the development server:
+Start the React development server:
 
 ```bash
 npm run dev
 ```
 
-The Vite development server will provide the frontend URL shown in the terminal.
+The Vite development server will display the frontend URL in the terminal.
+
+The backend services continue running through Docker Compose while the React frontend runs through Vite.
 
 ---
 
