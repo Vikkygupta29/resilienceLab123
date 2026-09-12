@@ -31,7 +31,8 @@ public class InventoryReservedConsumer {
 
     @KafkaListener(
             topics = "inventory.reserved",
-            groupId = "order-service-inventory-group"
+            groupId = "order-service-inventory-group",
+            containerFactory = "kafkaListenerContainerFactory"
     )
     public void consumeInventoryReserved(
             InventoryReservedEvent event,

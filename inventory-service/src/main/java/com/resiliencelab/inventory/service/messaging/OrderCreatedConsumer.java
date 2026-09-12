@@ -26,6 +26,8 @@ public class OrderCreatedConsumer {
 
     private static final String CONSUMER_NAME = "inventory-service";
     private static final String CORRELATION_ID = "correlationId";
+    private static final String ORDER_ID = "orderId";
+    private static final String EVENT_ID = "eventId";
 
     private final InventoryService inventoryService;
     private final InventoryEventProducer inventoryEventProducer;
@@ -53,6 +55,9 @@ public class OrderCreatedConsumer {
         if (correlationId != null && !correlationId.isBlank()) {
             MDC.put(CORRELATION_ID, correlationId);
         }
+
+        MDC.put(ORDER_ID, event.getOrderId());
+        MDC.put(EVENT_ID, event.getEventId());
 
         try {
 
@@ -119,6 +124,8 @@ public class OrderCreatedConsumer {
 
         } finally {
             MDC.remove(CORRELATION_ID);
+            MDC.remove(ORDER_ID);
+            MDC.remove(EVENT_ID);
         }
     }
 
@@ -131,6 +138,9 @@ public class OrderCreatedConsumer {
         if (correlationId != null && !correlationId.isBlank()) {
             MDC.put(CORRELATION_ID, correlationId);
         }
+
+        MDC.put(ORDER_ID, event.getOrderId());
+        MDC.put(EVENT_ID, event.getEventId());
 
         try {
 
@@ -154,6 +164,8 @@ public class OrderCreatedConsumer {
 
         } finally {
             MDC.remove(CORRELATION_ID);
+            MDC.remove(ORDER_ID);
+            MDC.remove(EVENT_ID);
         }
     }
 }

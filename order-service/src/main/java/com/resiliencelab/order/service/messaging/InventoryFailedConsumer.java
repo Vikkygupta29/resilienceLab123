@@ -1,4 +1,5 @@
-package com.resiliencelab.order.service.messaging;
+
+        package com.resiliencelab.order.service.messaging;
 
 import com.resiliencelab.order.service.dto.event.InventoryFailedEvent;
 import com.resiliencelab.order.service.entity.Order;
@@ -6,7 +7,6 @@ import com.resiliencelab.order.service.enums.OrderStatus;
 import com.resiliencelab.order.service.repository.OrderRepository;
 import org.slf4j.MDC;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 
@@ -41,6 +41,8 @@ public class InventoryFailedConsumer {
             MDC.put(CORRELATION_ID, correlationId);
         }
 
+        MDC.put("orderId", event.getOrderId());
+
         try {
             System.out.println("=================================");
             System.out.println("Order Service received inventory.failed");
@@ -65,6 +67,7 @@ public class InventoryFailedConsumer {
 
         } finally {
             MDC.remove(CORRELATION_ID);
+            MDC.remove("orderId");
         }
     }
 }

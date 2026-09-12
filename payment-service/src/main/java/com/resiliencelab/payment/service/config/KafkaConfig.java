@@ -29,7 +29,10 @@ public class KafkaConfig {
 
         props.put(
                 ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
-                System.getenv().getOrDefault("SPRING_KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
+                System.getenv().getOrDefault(
+                        "SPRING_KAFKA_BOOTSTRAP_SERVERS",
+                        "localhost:9092"
+                )
         );
 
         props.put(
@@ -75,6 +78,8 @@ public class KafkaConfig {
 
         factory.setConsumerFactory(consumerFactory);
 
+        factory.getContainerProperties().setObservationEnabled(true);
+
         return factory;
     }
 
@@ -85,7 +90,10 @@ public class KafkaConfig {
 
         props.put(
                 ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
-                System.getenv().getOrDefault("SPRING_KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
+                System.getenv().getOrDefault(
+                        "SPRING_KAFKA_BOOTSTRAP_SERVERS",
+                        "localhost:9092"
+                )
         );
 
         props.put(
@@ -105,6 +113,11 @@ public class KafkaConfig {
     public KafkaTemplate<String, Object> kafkaTemplate(
             ProducerFactory<String, Object> producerFactory) {
 
-        return new KafkaTemplate<>(producerFactory);
+        KafkaTemplate<String, Object> template =
+                new KafkaTemplate<>(producerFactory);
+
+        template.setObservationEnabled(true);
+
+        return template;
     }
 }

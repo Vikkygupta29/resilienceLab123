@@ -30,7 +30,10 @@ public class KafkaConfig {
 
         config.put(
                 ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
-                System.getenv().getOrDefault("SPRING_KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
+                System.getenv().getOrDefault(
+                        "SPRING_KAFKA_BOOTSTRAP_SERVERS",
+                        "localhost:9092"
+                )
         );
 
         config.put(
@@ -50,7 +53,12 @@ public class KafkaConfig {
     public KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate(
             ProducerFactory<String, OrderCreatedEvent> producerFactory) {
 
-        return new KafkaTemplate<>(producerFactory);
+        KafkaTemplate<String, OrderCreatedEvent> template =
+                new KafkaTemplate<>(producerFactory);
+
+        template.setObservationEnabled(true);
+
+        return template;
     }
 
     @Bean
@@ -60,7 +68,10 @@ public class KafkaConfig {
 
         config.put(
                 ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
-                System.getenv().getOrDefault("SPRING_KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
+                System.getenv().getOrDefault(
+                        "SPRING_KAFKA_BOOTSTRAP_SERVERS",
+                        "localhost:9092"
+                )
         );
 
         config.put(
@@ -80,6 +91,11 @@ public class KafkaConfig {
     public KafkaTemplate<String, PaymentRequestedEvent> paymentKafkaTemplate(
             ProducerFactory<String, PaymentRequestedEvent> paymentProducerFactory) {
 
-        return new KafkaTemplate<>(paymentProducerFactory);
+        KafkaTemplate<String, PaymentRequestedEvent> template =
+                new KafkaTemplate<>(paymentProducerFactory);
+
+        template.setObservationEnabled(true);
+
+        return template;
     }
 }

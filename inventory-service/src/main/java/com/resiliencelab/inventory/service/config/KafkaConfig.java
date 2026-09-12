@@ -105,6 +105,8 @@ public class KafkaConfig {
 
         factory.setConsumerFactory(consumerFactory);
 
+        factory.getContainerProperties().setObservationEnabled(true);
+
         return factory;
     }
 
@@ -144,7 +146,12 @@ public class KafkaConfig {
             ProducerFactory<String, InventoryReservedEvent>
                     inventoryReservedProducerFactory) {
 
-        return new KafkaTemplate<>(inventoryReservedProducerFactory);
+        KafkaTemplate<String, InventoryReservedEvent> template =
+                new KafkaTemplate<>(inventoryReservedProducerFactory);
+
+        template.setObservationEnabled(true);
+
+        return template;
     }
 
 
@@ -183,8 +190,18 @@ public class KafkaConfig {
             ProducerFactory<String, InventoryFailedEvent>
                     inventoryFailedProducerFactory) {
 
-        return new KafkaTemplate<>(inventoryFailedProducerFactory);
+        KafkaTemplate<String, InventoryFailedEvent> template =
+                new KafkaTemplate<>(inventoryFailedProducerFactory);
+
+        template.setObservationEnabled(true);
+
+        return template;
     }
+
+
+    // ==========================================
+    // RETRY TOPIC KAFKA TEMPLATE
+    // ==========================================
 
     @Bean(name = "defaultRetryTopicKafkaTemplate")
     public KafkaTemplate<String, Object> defaultRetryTopicKafkaTemplate() {
@@ -209,6 +226,11 @@ public class KafkaConfig {
         ProducerFactory<String, Object> producerFactory =
                 new DefaultKafkaProducerFactory<>(props);
 
-        return new KafkaTemplate<>(producerFactory);
+        KafkaTemplate<String, Object> template =
+                new KafkaTemplate<>(producerFactory);
+
+        template.setObservationEnabled(true);
+
+        return template;
     }
 }

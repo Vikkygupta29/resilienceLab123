@@ -98,6 +98,8 @@ public class KafkaConsumerConfig {
 
         factory.setConsumerFactory(consumerFactory);
 
+        factory.getContainerProperties().setObservationEnabled(true);
+
         return factory;
     }
 
@@ -167,6 +169,8 @@ public class KafkaConsumerConfig {
                 new ConcurrentKafkaListenerContainerFactory<>();
 
         factory.setConsumerFactory(consumerFactory);
+
+        factory.getContainerProperties().setObservationEnabled(true);
 
         return factory;
     }
@@ -238,6 +242,8 @@ public class KafkaConsumerConfig {
 
         factory.setConsumerFactory(consumerFactory);
 
+        factory.getContainerProperties().setObservationEnabled(true);
+
         return factory;
     }
 
@@ -307,6 +313,8 @@ public class KafkaConsumerConfig {
                 new ConcurrentKafkaListenerContainerFactory<>();
 
         factory.setConsumerFactory(consumerFactory);
+
+        factory.getContainerProperties().setObservationEnabled(true);
 
         return factory;
     }
