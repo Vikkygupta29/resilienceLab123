@@ -1,6 +1,8 @@
 package com.resiliencelab.inventory.service.messaging;
 
 import com.resiliencelab.inventory.service.dto.event.InventoryFailedEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
@@ -12,6 +14,9 @@ import org.springframework.stereotype.Component;
 public class InventoryFailedEventProducer {
 
     private static final String CORRELATION_ID = "correlationId";
+
+    private static final Logger log =
+            LoggerFactory.getLogger(InventoryFailedEventProducer.class);
 
     private final KafkaTemplate<String, InventoryFailedEvent> kafkaTemplate;
 
@@ -35,6 +40,12 @@ public class InventoryFailedEventProducer {
 
         kafkaTemplate.send(message);
 
-        System.out.println("Published inventory.failed event");
+        log.info(
+                "Published inventory.failed event: orderId={}, productId={}, quantity={}, reason={}",
+                event.getOrderId(),
+                event.getProductId(),
+                event.getQuantity(),
+                event.getReason()
+        );
     }
 }

@@ -14,6 +14,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class PaymentCompletedEvent {
 
+    private UUID eventId;
     private UUID orderId;
     private BigDecimal amount;
 }

@@ -13,7 +13,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PaymentCompletedEvent {
-
+    private UUID eventId;
     private UUID orderId;
     private BigDecimal amount;
 }

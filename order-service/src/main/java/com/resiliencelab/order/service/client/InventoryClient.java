@@ -9,6 +9,8 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
@@ -17,6 +19,9 @@ import org.springframework.web.client.RestClient;
 @Component
 @RequiredArgsConstructor
 public class InventoryClient {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(InventoryClient.class);
 
     private final RestClient restClient;
 
@@ -65,12 +70,10 @@ public class InventoryClient {
             int quantity,
             Throwable throwable) {
 
-        System.out.println(
-                "Inventory service unavailable for product: " + productId
-        );
-
-        System.out.println(
-                throwable.getClass().getSimpleName()
+        log.error(
+                "Inventory service unavailable for product: {}",
+                productId,
+                throwable
         );
 
         if (throwable instanceof DownstreamServiceTimeoutException) {
@@ -88,13 +91,10 @@ public class InventoryClient {
             int quantity,
             Throwable throwable) {
 
-        System.out.println(
-                "Rate limiter rejected inventory request for product: "
-                        + productId
-        );
-
-        System.out.println(
-                throwable.getClass().getSimpleName()
+        log.warn(
+                "Rate limiter rejected inventory request for product: {}",
+                productId,
+                throwable
         );
 
         throw new InventoryServiceUnavailableException(
@@ -102,5 +102,4 @@ public class InventoryClient {
                 throwable
         );
     }
-
 }

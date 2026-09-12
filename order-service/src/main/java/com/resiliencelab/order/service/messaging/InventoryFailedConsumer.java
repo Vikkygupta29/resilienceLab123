@@ -5,6 +5,8 @@ import com.resiliencelab.order.service.dto.event.InventoryFailedEvent;
 import com.resiliencelab.order.service.entity.Order;
 import com.resiliencelab.order.service.enums.OrderStatus;
 import com.resiliencelab.order.service.repository.OrderRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Header;
@@ -15,7 +17,11 @@ import java.util.UUID;
 @Component
 public class InventoryFailedConsumer {
 
+    private static final Logger log =
+            LoggerFactory.getLogger(InventoryFailedConsumer.class);
+
     private static final String CORRELATION_ID = "correlationId";
+    private static final String ORDER_ID = "orderId";
 
     private final OrderRepository orderRepository;
 
@@ -41,15 +47,15 @@ public class InventoryFailedConsumer {
             MDC.put(CORRELATION_ID, correlationId);
         }
 
-        MDC.put("orderId", event.getOrderId());
+        MDC.put(ORDER_ID, event.getOrderId());
 
         try {
-            System.out.println("=================================");
-            System.out.println("Order Service received inventory.failed");
-            System.out.println("Order ID: " + event.getOrderId());
-            System.out.println("Product ID: " + event.getProductId());
-            System.out.println("Quantity: " + event.getQuantity());
-            System.out.println("Reason: " + event.getReason());
+            log.info(
+                    "Received inventory.failed event. productId={}, quantity={}, reason={}",
+                    event.getProductId(),
+                    event.getQuantity(),
+                    event.getReason()
+            );
 
             UUID orderId = UUID.fromString(event.getOrderId());
 
@@ -62,12 +68,11 @@ public class InventoryFailedConsumer {
 
             orderRepository.save(order);
 
-            System.out.println("Order status updated to FAILED");
-            System.out.println("=================================");
+            log.info("Order status updated to FAILED");
 
         } finally {
             MDC.remove(CORRELATION_ID);
-            MDC.remove("orderId");
+            MDC.remove(ORDER_ID);
         }
     }
 }

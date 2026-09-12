@@ -7,6 +7,8 @@ import com.resiliencelab.order.service.exception.PaymentServiceUnavailableExcept
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
@@ -19,7 +21,11 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PaymentClient {
 
+    private static final Logger log =
+            LoggerFactory.getLogger(PaymentClient.class);
+
     private final RestClient restClient;
+
     @Value("${payment.service.url}")
     private String paymentServiceUrl;
 
@@ -52,12 +58,10 @@ public class PaymentClient {
             BigDecimal amount,
             Throwable throwable) {
 
-        System.out.println(
-                "Payment service unavailable for order: " + orderId
-        );
-
-        System.out.println(
-                throwable.getClass().getSimpleName()
+        log.error(
+                "Payment service unavailable for order: {}",
+                orderId,
+                throwable
         );
 
         if (throwable instanceof DownstreamServiceTimeoutException) {

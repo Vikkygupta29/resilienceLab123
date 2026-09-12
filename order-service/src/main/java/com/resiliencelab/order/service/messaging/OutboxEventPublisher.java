@@ -5,6 +5,8 @@ import com.resiliencelab.order.service.dto.event.OrderCreatedEvent;
 import com.resiliencelab.order.service.entity.OutboxEvent;
 import com.resiliencelab.order.service.repository.OutboxEventRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -14,6 +16,9 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class OutboxEventPublisher {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(OutboxEventPublisher.class);
 
     private final OutboxEventRepository outboxEventRepository;
     private final KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate;
@@ -43,19 +48,18 @@ public class OutboxEventPublisher {
                 outboxEvent.markAsPublished();
                 outboxEventRepository.save(outboxEvent);
 
-                System.out.println(
-                        "Outbox event published: "
-                                + outboxEvent.getEventId()
+                log.info(
+                        "Outbox event published: eventId={}",
+                        outboxEvent.getEventId()
                 );
 
             } catch (Exception e) {
 
-                System.out.println(
-                        "Failed to publish outbox event: "
-                                + outboxEvent.getEventId()
+                log.error(
+                        "Failed to publish outbox event: eventId={}",
+                        outboxEvent.getEventId(),
+                        e
                 );
-
-                e.printStackTrace();
             }
         }
     }

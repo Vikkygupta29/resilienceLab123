@@ -1,5 +1,7 @@
 package com.resiliencelab.inventory.service.messaging;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
@@ -11,6 +13,9 @@ import org.springframework.stereotype.Component;
 public class InventoryEventProducer {
 
     private static final String CORRELATION_ID = "correlationId";
+
+    private static final Logger log =
+            LoggerFactory.getLogger(InventoryEventProducer.class);
 
     private final KafkaTemplate<String, InventoryReservedEvent> kafkaTemplate;
 
@@ -34,6 +39,11 @@ public class InventoryEventProducer {
 
         kafkaTemplate.send(message);
 
-        System.out.println("Published inventory.reserved event");
+        log.info(
+                "Published inventory.reserved event: orderId={}, productId={}, quantity={}",
+                event.getOrderId(),
+                event.getProductId(),
+                event.getQuantity()
+        );
     }
 }

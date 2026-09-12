@@ -2,6 +2,8 @@ package com.resiliencelab.payment.service.messaging;
 
 import com.resiliencelab.payment.service.dto.event.PaymentCompletedEvent;
 import com.resiliencelab.payment.service.dto.event.PaymentFailedEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
@@ -13,6 +15,9 @@ import org.springframework.stereotype.Component;
 public class PaymentEventProducer {
 
     private static final String CORRELATION_ID = "correlationId";
+
+    private static final Logger log =
+            LoggerFactory.getLogger(PaymentEventProducer.class);
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
@@ -36,7 +41,11 @@ public class PaymentEventProducer {
 
         kafkaTemplate.send(message);
 
-        System.out.println("Published payment.completed event");
+        log.info(
+                "Published payment.completed event: orderId={}, amount={}",
+                event.getOrderId(),
+                event.getAmount()
+        );
     }
 
     public void publishPaymentFailed(
@@ -53,6 +62,10 @@ public class PaymentEventProducer {
 
         kafkaTemplate.send(message);
 
-        System.out.println("Published payment.failed event");
+        log.info(
+                "Published payment.failed event: orderId={}, reason={}",
+                event.getOrderId(),
+                event.getReason()
+        );
     }
 }

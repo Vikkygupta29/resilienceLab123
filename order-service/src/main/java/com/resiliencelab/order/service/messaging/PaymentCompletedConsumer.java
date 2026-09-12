@@ -6,9 +6,10 @@ import com.resiliencelab.order.service.enums.OrderStatus;
 import com.resiliencelab.order.service.repository.OrderRepository;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +19,11 @@ import java.util.UUID;
 public class PaymentCompletedConsumer {
 
     private static final String CORRELATION_ID = "correlationId";
+    private static final String ORDER_ID = "orderId";
+    private static final String EVENT_ID = "eventId";
+
+    private static final Logger log =
+            LoggerFactory.getLogger(PaymentCompletedConsumer.class);
 
     private final OrderRepository orderRepository;
     private final Counter ordersConfirmedCounter;
@@ -49,11 +55,14 @@ public class PaymentCompletedConsumer {
             MDC.put(CORRELATION_ID, correlationId);
         }
 
+        MDC.put(ORDER_ID, event.getOrderId().toString());
+        MDC.put(EVENT_ID, event.getEventId().toString());
+
         try {
-            System.out.println("=================================");
-            System.out.println("Order Service received payment.completed");
-            System.out.println("Order ID: " + event.getOrderId());
-            System.out.println("Amount: " + event.getAmount());
+            log.info(
+                    "Received payment.completed event: amount={}",
+                    event.getAmount()
+            );
 
             UUID orderId = event.getOrderId();
 
@@ -68,10 +77,11 @@ public class PaymentCompletedConsumer {
 
             ordersConfirmedCounter.increment();
 
-            System.out.println("Order status updated to CONFIRMED");
-            System.out.println("=================================");
+            log.info("Order status updated to CONFIRMED");
 
         } finally {
+            MDC.remove(EVENT_ID);
+            MDC.remove(ORDER_ID);
             MDC.remove(CORRELATION_ID);
         }
     }

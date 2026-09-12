@@ -10,7 +10,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PaymentFailedEvent {
-
+    private UUID eventId;
     private UUID orderId;
     private BigDecimal amount;
     private String reason;

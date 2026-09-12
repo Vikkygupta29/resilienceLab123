@@ -7,6 +7,8 @@ import com.resiliencelab.inventory.service.entity.ProcessedEvent;
 import com.resiliencelab.inventory.service.repository.ProcessedEventRepository;
 import com.resiliencelab.inventory.service.service.InventoryService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.kafka.annotation.BackOff;
 import org.springframework.kafka.annotation.DltHandler;
@@ -23,6 +25,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Component
 @RequiredArgsConstructor
 public class OrderCreatedConsumer {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(OrderCreatedConsumer.class);
 
     private static final String CONSUMER_NAME = "inventory-service";
     private static final String CORRELATION_ID = "correlationId";
@@ -61,7 +66,7 @@ public class OrderCreatedConsumer {
 
         try {
 
-            System.out.println("Kafka topic: " + topic);
+            log.info("Processing Kafka event from topic={}", topic);
 
             String eventId = event.getEventId();
 
@@ -69,21 +74,23 @@ public class OrderCreatedConsumer {
                     eventId,
                     CONSUMER_NAME
             )) {
-                System.out.println("Duplicate Kafka event detected: " + eventId);
-                System.out.println("Skipping inventory reservation.");
+                log.info(
+                        "Duplicate Kafka event detected. Skipping inventory reservation. eventId={}",
+                        eventId
+                );
                 return;
             }
 
             int attempt = attemptCounter.incrementAndGet();
 
-            System.out.println("Kafka processing attempt: " + attempt);
+            log.info("Kafka processing attempt={}", attempt);
 
-            System.out.println("=================================");
-            System.out.println("Inventory Service received order.created");
-            System.out.println("Order ID: " + event.getOrderId());
-            System.out.println("Product ID: " + event.getProductId());
-            System.out.println("Quantity: " + event.getQuantity());
-            System.out.println("Amount: " + event.getAmount());
+            log.info(
+                    "Received order.created event. productId={}, quantity={}, amount={}",
+                    event.getProductId(),
+                    event.getQuantity(),
+                    event.getAmount()
+            );
 
             ReserveInventoryRequest request =
                     new ReserveInventoryRequest(event.getQuantity());
@@ -102,14 +109,16 @@ public class OrderCreatedConsumer {
 
             processedEventRepository.save(processedEvent);
 
-            System.out.println("Kafka event marked as processed: "
-                    + event.getEventId());
+            log.info(
+                    "Kafka event marked as processed. eventId={}",
+                    event.getEventId()
+            );
 
-            System.out.println("Inventory reserved successfully!");
-            System.out.println("Available Quantity: "
-                    + response.availableQuantity());
-            System.out.println("Reserved Quantity: "
-                    + response.reservedQuantity());
+            log.info(
+                    "Inventory reserved successfully. availableQuantity={}, reservedQuantity={}",
+                    response.availableQuantity(),
+                    response.reservedQuantity()
+            );
 
             InventoryReservedEvent reservedEvent =
                     new InventoryReservedEvent(
@@ -120,7 +129,7 @@ public class OrderCreatedConsumer {
 
             inventoryEventProducer.publishInventoryReserved(reservedEvent);
 
-            System.out.println("=================================");
+            log.info("inventory.reserved event published");
 
         } finally {
             MDC.remove(CORRELATION_ID);
@@ -144,11 +153,11 @@ public class OrderCreatedConsumer {
 
         try {
 
-            System.out.println("=================================");
-            System.out.println("Order sent to DEAD LETTER TOPIC");
-            System.out.println("Order ID: " + event.getOrderId());
-            System.out.println("Product ID: " + event.getProductId());
-            System.out.println("Quantity: " + event.getQuantity());
+            log.error(
+                    "Order sent to DEAD LETTER TOPIC. productId={}, quantity={}",
+                    event.getProductId(),
+                    event.getQuantity()
+            );
 
             InventoryFailedEvent failedEvent =
                     new InventoryFailedEvent(
@@ -160,7 +169,7 @@ public class OrderCreatedConsumer {
 
             inventoryFailedEventProducer.publishInventoryFailed(failedEvent);
 
-            System.out.println("=================================");
+            log.info("inventory.failed event published");
 
         } finally {
             MDC.remove(CORRELATION_ID);

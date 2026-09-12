@@ -5,9 +5,10 @@ import com.resiliencelab.order.service.dto.event.PaymentRequestedEvent;
 import com.resiliencelab.order.service.entity.Order;
 import com.resiliencelab.order.service.enums.OrderStatus;
 import com.resiliencelab.order.service.repository.OrderRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +18,11 @@ import java.util.UUID;
 public class InventoryReservedConsumer {
 
     private static final String CORRELATION_ID = "correlationId";
+    private static final String ORDER_ID = "orderId";
+    private static final String EVENT_ID = "eventId";
+
+    private static final Logger log =
+            LoggerFactory.getLogger(InventoryReservedConsumer.class);
 
     private final OrderRepository orderRepository;
     private final PaymentEventProducer paymentEventProducer;
@@ -45,12 +51,14 @@ public class InventoryReservedConsumer {
             MDC.put(CORRELATION_ID, correlationId);
         }
 
+        MDC.put(ORDER_ID, event.getOrderId());
+
         try {
-            System.out.println("=================================");
-            System.out.println("Order Service received inventory.reserved");
-            System.out.println("Order ID: " + event.getOrderId());
-            System.out.println("Product ID: " + event.getProductId());
-            System.out.println("Quantity: " + event.getQuantity());
+            log.info(
+                    "Received inventory.reserved event: productId={}, quantity={}",
+                    event.getProductId(),
+                    event.getQuantity()
+            );
 
             UUID orderId = UUID.fromString(event.getOrderId());
 
@@ -63,7 +71,7 @@ public class InventoryReservedConsumer {
 
             orderRepository.save(order);
 
-            System.out.println("Order status updated to INVENTORY_RESERVED");
+            log.info("Order status updated to INVENTORY_RESERVED");
 
             PaymentRequestedEvent paymentEvent =
                     new PaymentRequestedEvent(
@@ -72,11 +80,15 @@ public class InventoryReservedConsumer {
                             order.getAmount()
                     );
 
+            MDC.put(EVENT_ID, paymentEvent.getEventId().toString());
+
             paymentEventProducer.publishPaymentRequested(paymentEvent);
 
-            System.out.println("=================================");
+            log.info("Payment requested event published");
 
         } finally {
+            MDC.remove(EVENT_ID);
+            MDC.remove(ORDER_ID);
             MDC.remove(CORRELATION_ID);
         }
     }
